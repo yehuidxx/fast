@@ -13,6 +13,14 @@
             padding: 20px;
             line-height: 1.6;
             color: #333;
+            position: relative;
+            z-index: 1;
+            opacity: 0.75; /* 降低主页内容不透明度 */
+            transition: opacity 0.5s ease;
+        }
+
+        body:hover {
+            opacity: 0.9; /* 鼠标悬停时增加不透明度 */
         }
 
         /* 头部样式 */
@@ -25,9 +33,11 @@
         section {
             margin-bottom: 40px;
             padding: 20px;
-            background-color: #f9f9f9;
+            background-color: rgba(249, 249, 249, 0.8);
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 1;
         }
 
         h2 {
@@ -63,6 +73,62 @@
             transform: translateY(-50%);
         }
 
+        /* 游戏样式 */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background-color: #e6f7ff;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .balloon {
+            position: absolute;
+            width: 40px;
+            height: 50px;
+            background-color: #ff4d4f;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .balloon:hover {
+            transform: scale(1.1);
+        }
+
+        .balloon::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 10px;
+            background-color: #999;
+        }
+
+        #score-display {
+            font-size: 18px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .game-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .game-button:hover {
+            background-color: #2980b9;
+        }
+
         /* 响应式设计 */
         @media (max-width: 600px) {
             body {
@@ -71,10 +137,27 @@
             section {
                 padding: 15px;
             }
+            #game-container {
+                height: 200px;
+            }
+        }
+
+        /* 烟花容器样式 */
+        #fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
+    <!-- 烟花容器 -->
+    <div id="fireworks-container"></div>
+
     <header>
         <h1>夜辉的个人主页</h1>
     </header>
@@ -95,7 +178,7 @@
             <li>
                 <!-- 添加HTML图标 -->
                 <img src="https://picsum.photos/30/30?random=2" alt="HTML图标">
-                HTML & kali
+                HTML & CSS
             </li>
             <li>
                 <!-- 添加批处理图标 -->
@@ -114,5 +197,487 @@
             </li>
         </ul>
     </section>
+
+    <!-- 我的游戏 -->
+    <section id="games">
+        <h2>我的游戏</h2>
+        <p>来试试我开发的小游戏吧！点击漂浮的气球，看看你能得多少分。</p>
+
+        <div id="game-controls">
+            <button id="start-game" class="game-button">开始游戏</button>
+            <button id="stop-game" class="game-button" disabled>停止游戏</button>
+        </div>
+
+        <div id="game-container"></div>
+
+        <div id="score-display">得分: 0</div>
+    </section>
+
+    <script>
+        // 游戏逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            const gameContainer = document.getElementById('game-container');
+            const startButton = document.getElementById('start-game');
+            const stopButton = document.getElementById('stop-game');
+            const scoreDisplay = document.getElementById('score-display');
+
+            let score = 0;
+            let gameInterval;
+            let isGameRunning = false;
+            const balloonColors = ['#ff4d4f', '#722ed1', '#13c2c2', '#52c41a', '#faad14'];
+
+            // 创建气球
+            function createBalloon() {
+                if (!isGameRunning) return;
+
+                const balloon = document.createElement('div');
+                balloon.className = 'balloon';
+
+                // 随机颜色
+                const colorIndex = Math.floor(Math.random() * balloonColors.length);
+                balloon.style.backgroundColor = balloonColors[colorIndex];
+
+                // 随机位置
+                const leftPos = Math.random() * (gameContainer.offsetWidth - 40);
+                balloon.style.left = `${leftPos}px`;
+                balloon.style.bottom = '-50px';
+
+                gameContainer.appendChild(balloon);
+
+                // 气球上升动画
+                let bottomPos = -50;
+                const riseInterval = setInterval(() => {
+                    bottomPos += 2;
+                    balloon.style.bottom = `${bottomPos}px`;
+
+                    // 如果气球飞出容器或游戏停止，清除气球
+                    if (bottomPos > gameContainer.offsetHeight || !isGameRunning) {
+                        clearInterval(riseInterval);
+                        balloon.remove();
+                    }
+                }, 30);
+
+                // 点击气球
+                balloon.addEventListener('click', () => {
+                    clearInterval(riseInterval);
+                    score++;
+                    scoreDisplay.textContent = `得分: ${score}`;
+
+                    // 气球爆炸效果
+                    balloon.style.transform = 'scale(0)';
+                    setTimeout(() => {
+                        balloon.remove();
+                    }, 300);
+                });
+            }
+
+            // 开始游戏
+            startButton.addEventListener('click', () => {
+                if (isGameRunning) return;
+
+                isGameRunning = true;
+                score = 0;
+                scoreDisplay.textContent = '得分: 0';
+                startButton.disabled = true;
+                stopButton.disabled = false;
+
+                // 清空游戏容器
+                gameContainer.innerHTML = '';
+
+                // 定期创建气球
+                gameInterval = setInterval(createBalloon, 1500);
+            });
+
+            // 停止游戏
+            stopButton.addEventListener('click', () => {
+                if (!isGameRunning) return;
+
+                isGameRunning = false;
+                clearInterval(gameInterval);
+                startButton.disabled = false;
+                stopButton.disabled = true;
+
+                // 移除所有气球
+                const balloons = document.querySelectorAll('.balloon');
+                balloons.forEach(balloon => balloon.remove());
+            });
+        });
+
+        // 动态烟花效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 创建Canvas元素
+            const container = document.getElementById('fireworks-container');
+            const canvas = document.createElement('canvas');
+            container.appendChild(canvas);
+
+            // 设置Canvas尺寸
+            const setCanvasSize = () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            };
+
+            // 监听窗口大小变化
+            window.addEventListener('resize', setCanvasSize);
+            setCanvasSize();
+
+            // 获取绘图上下文
+            const ctx = canvas.getContext('2d');
+
+            // 存储烟花和粒子
+            const fireworks = [];
+            const particles = [];
+
+            // 性能监控
+            let lastFrameTime = 0;
+            let frameTimes = [];
+            let targetFPS = 60;
+            let fps = 60;
+            let slowMode = false;
+
+            // 生成随机鲜艳颜色
+            function getRandomColor() {
+                const h = Math.floor(Math.random() * 360);
+                const s = 80 + Math.floor(Math.random() * 20);
+                const l = 50 + Math.floor(Math.random() * 20);
+                return `hsl(${h}, ${s}%, ${l}%)`;
+            }
+
+            // 生成一组随机颜色
+            function getRandomColors() {
+                const count = 3 + Math.floor(Math.random() * 3);
+                const colors = [];
+                for (let i = 0; i < count; i++) {
+                    colors.push(getRandomColor());
+                }
+                return colors;
+            }
+
+            // 烟花类
+            class Firework {
+                constructor(x, y, targetX, targetY) {
+                    this.x = x;
+                    this.y = y;
+                    this.targetX = targetX;
+                    this.targetY = targetY;
+                    this.color = getRandomColor();
+                    this.radius = 3;
+                    this.speed = slowMode ? 5 + Math.random() * 3 : 6 + Math.random() * 4;
+                    this.gravity = 0.04;
+                    this.opacity = 1;
+
+                    // 计算角度和速度分量
+                    const angle = Math.atan2(targetY - y, targetX - x);
+                    this.vx = Math.cos(angle) * this.speed;
+                    this.vy = Math.sin(angle) * this.speed;
+
+                    // 判断是否到达目标位置
+                    this.arrived = false;
+                }
+
+                update() {
+                    // 更新位置
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // 添加重力
+                    this.vy += this.gravity;
+
+                    // 计算到目标的距离
+                    const distance = Math.sqrt(
+                        Math.pow(this.targetX - this.x, 2) +
+                        Math.pow(this.targetY - this.y, 2)
+                    );
+
+                    // 如果到达目标位置或速度方向改变，则爆炸
+                    if (distance < this.speed || (this.vy > 0 && this.y > this.targetY)) {
+                        this.arrived = true;
+                        this.explode();
+                    }
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+
+                    // 绘制尾迹
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.x - this.vx * 3, this.y - this.vy * 3);
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+
+                explode() {
+                    // 生成一组随机颜色
+                    const colors = getRandomColors();
+
+                    // 根据性能调整粒子数量
+                    const baseParticleCount = slowMode ? 80 : 150;
+                    const particleCount = baseParticleCount + Math.floor(Math.random() * (slowMode ? 50 : 100));
+
+                    // 创建粒子，随机分配颜色
+                    for (let i = 0; i < particleCount; i++) {
+                        const colorIndex = Math.floor(Math.random() * colors.length);
+                        const p = new Particle(
+                            this.x,
+                            this.y,
+                            colors[colorIndex]
+                        );
+                        particles.push(p);
+                    }
+                }
+            }
+
+            // 粒子类
+            class Particle {
+                constructor(x, y, color) {
+                    this.x = x;
+                    this.y = y;
+                    this.color = color;
+                    this.radius = slowMode ? 1 + Math.random() * 2 : 2 + Math.random() * 3;
+
+                    // 随机速度和方向
+                    const angle = Math.random() * Math.PI * 2;
+                    const baseSpeed = slowMode ? 2 + Math.random() * 3 : 3 + Math.random() * 5;
+                    this.vx = Math.cos(angle) * baseSpeed;
+                    this.vy = Math.sin(angle) * baseSpeed;
+
+                    this.gravity = 0.025;
+                    this.friction = 0.96;
+                    this.opacity = 1;
+                    this.life = 1;
+                    this.lifeDecay = 0.004 + Math.random() * (slowMode ? 0.01 : 0.008);
+                }
+
+                update() {
+                    // 更新速度
+                    this.vx *= this.friction;
+                    this.vy *= this.friction;
+                    this.vy += this.gravity;
+
+                    // 更新位置
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // 更新生命周期
+                    this.life -= this.lifeDecay;
+                    this.opacity = this.life;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+
+                    // 添加发光效果
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = slowMode ? 5 : 10;
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 0;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius * 1.5, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${this.color.split('(')[1].split(')')[0]}, 0.5)`;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            // 检测性能并调整渲染质量
+            function checkPerformance(timestamp) {
+                // 计算帧率
+                if (lastFrameTime) {
+                    const frameTime = timestamp - lastFrameTime;
+                    frameTimes.push(frameTime);
+
+                    // 保持最近30帧的数据
+                    if (frameTimes.length > 30) {
+                        frameTimes.shift();
+                    }
+
+                    // 计算平均帧率
+                    const avgFrameTime = frameTimes.reduce((sum, time) => sum + time, 0) / frameTimes.length;
+                    fps = Math.round(1000 / avgFrameTime);
+
+                    // 根据帧率调整性能模式
+                    if (fps < 45) {
+                        slowMode = true;
+                    } else if (fps > 55) {
+                        slowMode = false;
+                    }
+                }
+
+                lastFrameTime = timestamp;
+            }
+
+            // 粒子合并优化 - 合并距离相近的粒子
+            function optimizeParticles() {
+                if (particles.length < 100) return; // 粒子数量较少时不优化
+
+                // 创建网格进行空间分区，提高检测效率
+                const cellSize = 30;
+                const grid = {};
+
+                // 将粒子放入网格
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    const cellX = Math.floor(p.x / cellSize);
+                    const cellY = Math.floor(p.y / cellSize);
+                    const key = `${cellX},${cellY}`;
+
+                    if (!grid[key]) {
+                        grid[key] = [];
+                    }
+                    grid[key].push(i);
+                }
+
+                // 检查相邻粒子是否可以合并
+                const merged = new Set();
+                for (const key in grid) {
+                    const cell = grid[key];
+                    const [cellX, cellY] = key.split(',').map(Number);
+
+                    // 检查当前单元格和相邻单元格
+                    for (let dx = -1; dx <= 1; dx++) {
+                        for (let dy = -1; dy <= 1; dy++) {
+                            const neighborKey = `${cellX + dx},${cellY + dy}`;
+                            const neighborCell = grid[neighborKey];
+
+                            if (!neighborCell) continue;
+
+                            // 检查当前单元格和相邻单元格中的粒子
+                            for (let i = 0; i < cell.length; i++) {
+                                const idx1 = cell[i];
+                                if (merged.has(idx1)) continue;
+
+                                for (let j = 0; j < neighborCell.length; j++) {
+                                    const idx2 = neighborCell[j];
+                                    if (idx1 === idx2 || merged.has(idx2)) continue;
+
+                                    const p1 = particles[idx1];
+                                    const p2 = particles[idx2];
+
+                                    // 计算距离
+                                    const dx = p2.x - p1.x;
+                                    const dy = p2.y - p1.y;
+                                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                                    // 如果两个粒子足够近且颜色相近，则合并
+                                    if (distance < (p1.radius + p2.radius) * 0.7) {
+                                        // 合并粒子属性
+                                        p1.radius = Math.sqrt(p1.radius * p1.radius + p2.radius * p2.radius);
+                                        p1.vx = (p1.vx * p1.radius + p2.vx * p2.radius) / (p1.radius + p2.radius);
+                                        p1.vy = (p1.vy * p1.radius + p2.vy * p2.radius) / (p1.radius + p2.radius);
+                                        p1.life = Math.max(p1.life, p2.life);
+
+                                        merged.add(idx2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 移除已合并的粒子
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    if (merged.has(i)) {
+                        particles.splice(i, 1);
+                    }
+                }
+            }
+
+            // 创建新烟花
+            function createFirework(x, y) {
+                // 如果没有指定位置，随机生成
+                if (x === undefined || y === undefined) {
+                    x = Math.random() * canvas.width;
+                    y = canvas.height;
+
+                    // 目标位置
+                    const targetX = Math.random() * canvas.width;
+                    const targetY = Math.random() * canvas.height * 0.5;
+
+                    // 创建烟花
+                    fireworks.push(new Firework(x, y, targetX, targetY));
+                } else {
+                    // 从底部发射到点击位置
+                    const startX = Math.random() * canvas.width;
+                    const startY = canvas.height;
+
+                    // 创建烟花
+                    fireworks.push(new Firework(startX, startY, x, y));
+                }
+            }
+
+            // 动画循环
+            function animate(timestamp) {
+                checkPerformance(timestamp);
+
+                requestAnimationFrame(animate);
+
+                // 清空画布
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 绘制背景
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, 'rgba(5, 5, 20, 0.9)');
+                gradient.addColorStop(1, 'rgba(5, 5, 20, 0.7)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // 粒子优化
+                if (particles.length > 300) {
+                    optimizeParticles();
+                }
+
+                // 更新和绘制烟花
+                for (let i = fireworks.length - 1; i >= 0; i--) {
+                    const firework = fireworks[i];
+                    firework.update();
+                    firework.draw();
+
+                    if (firework.arrived) {
+                        fireworks.splice(i, 1);
+                    }
+                }
+
+                // 更新和绘制粒子
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const particle = particles[i];
+                    particle.update();
+                    particle.draw();
+
+                    if (particle.life <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+            }
+
+            // 自动创建烟花
+            function autoCreateFireworks() {
+                // 在性能模式下减少烟花生成频率
+                const baseInterval = slowMode ? 1500 : 1000;
+                const nextFireworkTime = baseInterval + Math.random() * (slowMode ? 4000 : 3000);
+
+                createFirework();
+                setTimeout(autoCreateFireworks, nextFireworkTime);
+            }
+
+            // 点击事件创建烟花
+            canvas.addEventListener('click', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                createFirework(x, y);
+            });
+
+            // 开始动画和自动创建烟花
+            animate(performance.now());
+            autoCreateFireworks();
+        });
+    </script>
 </body>
 </html>
