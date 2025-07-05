@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的选择从来只有一个</title>
+    <style>
+        /* 基础样式设置 */
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* 头部样式 */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* 区块样式 */
+        section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* 照片样式 */
+        .profile-photo {
+            display: block;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+        }
+
+        /* 技能列表样式 */
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 15px;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        li img {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>夜辉的个人主页</h1>
+    </header>
+
+    <!-- 关于我 -->
+    <section id="about">
+        <h2>关于我</h2>
+        <!-- 添加个人照片 -->
+        <img src="https://picsum.photos/200/200?random=1" alt="夜辉的个人照片" class="profile-photo">
+        <p>你好！我是夜辉，一名Web开发爱好者，喜欢学习新技术并分享知识。</p>
+        <p>目前正在学习前端开发，希望未来能成为一名自由全栈工程师。</p>
+    </section>
+
+    <!-- 技能 -->
+    <section id="skills">
+        <h2>我的技能</h2>
+        <ul>
+            <li>
+                <!-- 添加HTML图标 -->
+                <img src="https://picsum.photos/30/30?random=2" alt="HTML图标">
+                HTML & kali
+            </li>
+            <li>
+                <!-- 添加批处理图标 -->
+                <img src="https://picsum.photos/30/30?random=3" alt="批处理图标">
+                批处理
+            </li>
+            <li>
+                <!-- 添加Python图标 -->
+                <img src="https://picsum.photos/30/30?random=4" alt="Python图标">
+                Python基础
+            </li>
+            <li>
+                <!-- 添加Git图标 -->
+                <img src="https://picsum.photos/30/30?random=5" alt="Git图标">
+                Git版本控制
+            </li>
+        </ul>
+    </section>
+</body>
+</html>
